@@ -4,13 +4,13 @@ Copyright 2020, 2021 Šimon Brandner <simon.bra.ag@gmail.com>
 Copyright 2019 Michael Telatynski <7t3chguy@gmail.com>
 Copyright 2015, 2016 OpenMarket Ltd
 
-SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only
+SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Commercial
 Please see LICENSE files in the repository root for full details.
 */
 
-import React, { createRef, CSSProperties, useRef, useState } from "react";
+import React, { type JSX, createRef, type CSSProperties, useRef, useState } from "react";
 import FocusLock from "react-focus-lock";
-import { MatrixEvent, parseErrorResponse } from "matrix-js-sdk/src/matrix";
+import { type MatrixEvent, parseErrorResponse } from "matrix-js-sdk/src/matrix";
 
 import { _t } from "../../../languageHandler";
 import MemberAvatar from "../avatars/MemberAvatar";
@@ -22,10 +22,10 @@ import SettingsStore from "../../../settings/SettingsStore";
 import { formatFullDate } from "../../../DateUtils";
 import dis from "../../../dispatcher/dispatcher";
 import { Action } from "../../../dispatcher/actions";
-import { RoomPermalinkCreator } from "../../../utils/permalinks/Permalinks";
+import { type RoomPermalinkCreator } from "../../../utils/permalinks/Permalinks";
 import { normalizeWheelEvent } from "../../../utils/Mouse";
 import UIStore from "../../../stores/UIStore";
-import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
+import { type ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 import { getKeyBindingsManager } from "../../../KeyBindingsManager";
 import { presentableTextForFile } from "../../../utils/FileUtils";
@@ -585,7 +585,7 @@ export default class ImageView extends React.Component<IProps, IState> {
 function DownloadButton({ url, fileName }: { url: string; fileName?: string }): JSX.Element {
     const downloader = useRef(new FileDownloader()).current;
     const [loading, setLoading] = useState(false);
-    const blobRef = useRef<Blob>();
+    const blobRef = useRef<Blob>(undefined);
 
     function showError(e: unknown): void {
         Modal.createDialog(ErrorDialog, {

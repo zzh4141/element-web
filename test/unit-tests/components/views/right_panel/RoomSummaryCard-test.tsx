@@ -2,15 +2,15 @@
 Copyright 2024 New Vector Ltd.
 Copyright 2023 The Matrix.org Foundation C.I.C.
 
-SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only
+SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Commercial
 Please see LICENSE files in the repository root for full details.
 */
 
 import React from "react";
 import { render, fireEvent, screen, waitFor } from "jest-matrix-react";
-import { EventType, MatrixEvent, Room, MatrixClient, JoinRule } from "matrix-js-sdk/src/matrix";
+import { EventType, MatrixEvent, Room, type MatrixClient, JoinRule } from "matrix-js-sdk/src/matrix";
 import { KnownMembership } from "matrix-js-sdk/src/types";
-import { mocked, MockedObject } from "jest-mock";
+import { mocked, type MockedObject } from "jest-mock";
 import userEvent from "@testing-library/user-event";
 
 import DMRoomMap from "../../../../../src/utils/DMRoomMap";
@@ -23,7 +23,7 @@ import * as settingsHooks from "../../../../../src/hooks/useSettings";
 import Modal from "../../../../../src/Modal";
 import RightPanelStore from "../../../../../src/stores/right-panel/RightPanelStore";
 import { RightPanelPhases } from "../../../../../src/stores/right-panel/RightPanelStorePhases";
-import { flushPromises, stubClient } from "../../../../test-utils";
+import { flushPromises, stubClient, untilDispatch } from "../../../../test-utils";
 import { PollHistoryDialog } from "../../../../../src/components/views/dialogs/PollHistoryDialog";
 import { RoomPermalinkCreator } from "../../../../../src/utils/permalinks/Permalinks";
 import { _t } from "../../../../../src/languageHandler";
@@ -32,6 +32,7 @@ import { DefaultTagID } from "../../../../../src/stores/room-list/models";
 import { Action } from "../../../../../src/dispatcher/actions";
 import { TimelineRenderingType } from "../../../../../src/contexts/RoomContext";
 import { ScopedRoomContextProvider } from "../../../../../src/contexts/ScopedRoomContext.tsx";
+import { ReportRoomDialog } from "../../../../../src/components/views/dialogs/ReportRoomDialog.tsx";
 
 jest.mock("../../../../../src/utils/room/tagRoom");
 
@@ -277,6 +278,37 @@ describe("<RoomSummaryCard />", () => {
         );
     });
 
+    it("dispatches leave room on button click", async () => {
+        jest.spyOn(Modal, "createDialog").mockReturnValueOnce({
+            finished: Promise.resolve([true]),
+            close: () => {},
+        });
+        const { getByText } = getComponent();
+
+        fireEvent.click(getByText(_t("room_list|more_options|leave_room")));
+        await untilDispatch("leave_room", defaultDispatcher);
+        expect(defaultDispatcher.dispatch).toHaveBeenCalledWith({
+            action: "leave_room",
+            room_id: room.roomId,
+        });
+    });
+
+    it("opens report dialog on button click", async () => {
+        jest.spyOn(Modal, "createDialog").mockReturnValueOnce({
+            finished: Promise.resolve([true]),
+            close: () => {},
+        });
+        const { getByText } = getComponent();
+
+        fireEvent.click(getByText(_t("action|report_room")));
+        expect(Modal.createDialog).toHaveBeenCalledWith(ReportRoomDialog, { roomId: room.roomId });
+        await untilDispatch("leave_room", defaultDispatcher);
+        expect(defaultDispatcher.dispatch).toHaveBeenCalledWith({
+            action: "leave_room",
+            room_id: room.roomId,
+        });
+    });
+
     describe("pinning", () => {
         it("renders pins options", () => {
             const { getByText } = getComponent();
@@ -338,19 +370,18 @@ describe("<RoomSummaryCard />", () => {
         });
 
         it("does not show public room label for a DM", async () => {
-            mockClient.getAccountData.mockImplementation(
-                (eventType) =>
-                    ({
-                        [EventType.Direct]: new MatrixEvent({
-                            type: EventType.Direct,
-                            content: {
-                                "@bob:sesame.st": ["some-room-id"],
-                                // this room is a DM with ernie
-                                "@ernie:sesame.st": ["some-other-room-id", room.roomId],
-                            },
-                        }),
-                    })[eventType],
-            );
+            mockClient.getAccountData.mockImplementation((eventType) => {
+                if (eventType === EventType.Direct) {
+                    return new MatrixEvent({
+                        type: EventType.Direct,
+                        content: {
+                            "@bob:sesame.st": ["some-room-id"],
+                            // this room is a DM with ernie
+                            "@ernie:sesame.st": ["some-other-room-id", room.roomId],
+                        },
+                    });
+                }
+            });
             getComponent();
 
             await flushPromises();

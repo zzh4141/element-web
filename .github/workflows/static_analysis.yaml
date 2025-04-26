@@ -51,6 +51,7 @@ jobs:
                 error|invalid_json
                 error|misconfigured
                 welcome_to_element
+                devtools|settings|elementCallUrl
 
     rethemendex_lint:
         name: "Rethemendex Check"
@@ -132,9 +133,3 @@ jobs:
 
             - name: Run linter
               run: "yarn run lint:knip"
-
-            - name: Install Deps
-              run: "scripts/layered.sh"
-
-            - name: Dead Code Analysis
-              run: "yarn run analyse:unused-exports"

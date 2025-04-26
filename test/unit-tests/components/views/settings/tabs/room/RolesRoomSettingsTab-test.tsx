@@ -2,13 +2,20 @@
 Copyright 2024 New Vector Ltd.
 Copyright 2022 The Matrix.org Foundation C.I.C.
 
-SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only
+SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Commercial
 Please see LICENSE files in the repository root for full details.
 */
 
 import React from "react";
-import { fireEvent, getByRole, render, RenderResult, screen, waitFor } from "jest-matrix-react";
-import { MatrixClient, EventType, MatrixEvent, Room, RoomMember, ISendEventResponse } from "matrix-js-sdk/src/matrix";
+import { fireEvent, getByRole, render, type RenderResult, screen, waitFor } from "jest-matrix-react";
+import {
+    type MatrixClient,
+    EventType,
+    MatrixEvent,
+    Room,
+    RoomMember,
+    type ISendEventResponse,
+} from "matrix-js-sdk/src/matrix";
 import { KnownMembership } from "matrix-js-sdk/src/types";
 import { mocked } from "jest-mock";
 import { defer } from "matrix-js-sdk/src/utils";
@@ -69,7 +76,7 @@ describe("RolesRoomSettingsTab", () => {
 
     describe("Element Call", () => {
         const setGroupCallsEnabled = (val: boolean): void => {
-            jest.spyOn(SettingsStore, "getValue").mockImplementation((name: string) => {
+            jest.spyOn(SettingsStore, "getValue").mockImplementation((name: string): any => {
                 if (name === "feature_group_calls") return val;
             });
         };
@@ -217,6 +224,9 @@ describe("RolesRoomSettingsTab", () => {
                     content: {
                         users: {
                             [cli.getUserId()!]: 100,
+                            // needs at least one remaning admin in the room if we want to demote our user
+                            // otherwise another modal will be displayed
+                            ["@admin:server"]: 100,
                         },
                     },
                 });
